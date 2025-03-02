@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="https://raw.githubusercontent.com/MJJB-INTERNATIONAL/MJJBimge/ff9efb478c457858dec4fdeace1151e474e2dc22/RUBY%20bbrrr2.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RUBY PLASTIC</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-top: 100px; /* Adjust based on header height */
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background-color: #f3f3f3;
+            border-bottom: 2px solid #000;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            height: 80px; /* Fixed header height */
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #logo-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        #logo {
+            width: 368px; /* Adjusted for better mobile compatibility */
+            height: auto; /* Maintain aspect ratio */
+            pointer-events: none;
+            margin-top: 197px;
+            margin-left: -133px;
+        }
+        #header-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-left: 15px;
+        }
+        #header-title {
+            font-family: 'Audiowide', cursive;
+            font-size: 26px;
+            color: #000;
+            margin-top: 71px;
+            margin-left: -1550px;
+        }
+        #header-subtitle {
+            font-family: 'Audiowide', cursive;
+            font-size: 14px;
+            color: #555;
+            margin: 0;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding-top: 90px; /* Adjusted for mobile header height */
+            }
+            header {
+                height: 70px; /* Smaller header for mobile */
+                padding: 8px 15px;
+            }
+            #logo {
+                width: 60px; /* Smaller logo for mobile */
+            }
+            #header-title {
+                font-size: 18px; /* Adjusted for mobile */
+            }
+            #header-subtitle {
+                font-size: 12px; /* Adjusted for mobile */
+            }
+        }
+        textarea, input, button { margin: 5px; padding: 10px; width: 100%; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        .mobile-buttons { display: none; }
+        @media (max-width: 768px) {
+            .mobile-buttons { display: block; }
+        }
+        .error-message { color: red; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <header>
+        <img id="logo" src="https://raw.githubusercontent.com/MJJB-INTERNATIONAL/MJJBimge/ed2da4155903055fb7f9fa882e98fba25ca41101/RUBY%20rrbbb.svg" alt="Logo">
+        <div id="header-text">
+            <u><h1 id="header-title">RUBY PLASTIC</h1></u>
+        </div>
+    </header>
+
+    <!-- Upload Section (Visible Initially) -->
+    <div id="uploadSection">
+        <h1>RUBY PLASTIC</h1>
+        <h5>Upload Your GitHub Token JSON File To Proceed.</h5>
+        <input type="file" id="tokenUpload" accept=".json">
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <!-- Main Content (Hidden Initially) -->
+    <div id="mainContent" style="display: none;">
+        <h2>Enter Products</h2>
+        <textarea id="productInput" rows="6" placeholder="Paste product details here..."></textarea>
+        <input type="date" id="date">
+        <div class="mobile-buttons">
+            <button onclick="processInput()">Process Data</button>
+            <button onclick="uploadToGitHub()">Upload to GitHub</button>
+        </div>
+
+        <h2>Search Products</h2>
+        <label>From: <input type="date" id="fromDate"></label>
+        <label>To: <input type="date" id="toDate"></label>
+        <button onclick="fetchProductsByDate()">Fetch Products</button>
+
+        <table id="dataTable" style="display: none;">
+            <thead>
+                <tr><th>Description</th><th>Bag Quantity</th><th>Date</th></tr>
+            </thead>
+            <tbody id="productTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        
+        let products = [];
+        let GITHUB_CONFIG = {
+            TOKEN: '', // Will be set after uploading the JSON file
+            REPO: 'PRODUCTS', // Replace with your GitHub repository name
+            OWNER: 'viralbalaji' // Replace with your GitHub username
+        };
+
+        // Function to handle the upload of the JSON file containing the GitHub token
+        function handleTokenUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const tokenData = JSON.parse(e.target.result);
+
+                    // Validate the JSON structure
+                    if (!tokenData.githubToken) {
+                        throw new Error('Invalid JSON structure. Missing "githubToken" key.');
+                    }
+
+                    // Set the GitHub token
+                    GITHUB_CONFIG.TOKEN = tokenData.githubToken;
+
+                    // Hide the upload section and show the main content
+                    document.getElementById("uploadSection").style.display = "none";
+                    document.getElementById("mainContent").style.display = "block";
+
+                } catch (error) {
+                    // Show error message for invalid JSON files
+                    document.getElementById("errorMessage").textContent = "Invalid JSON file. Please upload a valid JSON file.";
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Add event listener for the token upload input
+        document.getElementById("tokenUpload").addEventListener("change", handleTokenUpload);
+
+        // Set default date selection
+        document.getElementById("date").valueAsDate = new Date();
+
+        // Set 'From' and 'To' date inputs to today's date
+        window.onload = () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("fromDate").value = today;
+            document.getElementById("toDate").value = today;
+            document.getElementById("productInput").focus();
+        };
+
+        // Press ENTER to process input and disable the textarea
+        document.getElementById("productInput").addEventListener("keypress", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                processInput();
+                document.getElementById("productInput").disabled = true;
+            }
+        });
+
+        // SHIFT + U for uploading to GitHub
+        document.addEventListener("keydown", (event) => {
+            if (event.shiftKey && event.key === "U") {
+                event.preventDefault();
+                uploadToGitHub();
+            }
+        });
+
+        function processInput() {
+            const inputText = document.getElementById("productInput").value.trim();
+            if (!inputText) return;
+            const selectedDate = document.getElementById("date").value;
+            const lines = inputText.split("\n");
+
+            const regex = /(.+?)\s+(\d+)$/;  // Matches "Product Description 10"
+            lines.forEach(line => {
+                line = line.trim();
+                const match = line.match(regex);
+                if (match) {
+                    const description = match[1].trim();
+                    const quantity = parseInt(match[2].trim());
+                    if (description && !isNaN(quantity)) {
+                        products.push({ description, bag: quantity, date: selectedDate });
+                    }
+                }
+            });
+
+            if (products.length > 0) {
+                updateTable();
+            }
+        }
+
+        function updateTable() {
+            const table = document.getElementById("dataTable");
+            table.style.display = "table";
+            const tbody = document.getElementById("productTable");
+            tbody.innerHTML = "";
+
+            // Sort products by 'bag' quantity (highest to lowest)
+            products.sort((a, b) => b.bag - a.bag);
+
+            products.forEach(product => {
+                const row = `<tr><td>${product.description}</td><td>${product.bag}</td><td>${product.date}</td></tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        async function uploadToGitHub() {
+            const filePath = "data/products.json";
+            const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${filePath}`;
+
+            let existingData = [];
+            let sha = "";
+
+            try {
+                const response = await fetch(apiUrl, { headers: { Authorization: `token ${GITHUB_CONFIG.TOKEN}` } });
+                if (response.ok) {
+                    const data = await response.json();
+                    existingData = JSON.parse(atob(data.content));
+                    sha = data.sha;
+                }
+            } catch (error) {
+                console.log("File not found, creating a new one.");
+            }
+
+            existingData = existingData.concat(products);  
+            // Sort products before uploading (ensuring order in GitHub file)
+            existingData.sort((a, b) => b.bag - a.bag);
+
+            const content = btoa(unescape(encodeURIComponent(JSON.stringify(existingData, null, 2))));
+
+            const payload = {
+                message: "Updated product data",
+                content: content,
+                sha: sha || undefined
+            };
+
+            try {
+                const result = await fetch(apiUrl, {
+                    method: "PUT",
+                    headers: { Authorization: `token ${GITHUB_CONFIG.TOKEN}`, "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (result.ok) {
+                    alert("Data uploaded successfully!");
+                } else {
+                    alert("Upload failed. Check console for details.");
+                    console.log(await result.json());
+                }
+            } catch (error) {
+                console.error("Upload error: ", error);
+                alert("Upload failed due to an error. Check console for details.");
+            }
+        }
+
+        async function fetchProductsByDate() {
+            const fromDate = new Date(document.getElementById("fromDate").value);
+            const toDate = new Date(document.getElementById("toDate").value);
+
+            await fetchDataFromGitHub();
+
+            // Filter products by date range          
+            let filteredProducts = products.filter(product => {
+                const productDate = new Date(product.date);
+                return productDate >= fromDate && productDate <= toDate;
+            });
+
+            // Merge products with the same description by summing their quantities
+            const mergedProductsMap = new Map();
+
+            filteredProducts.forEach(product => {
+                const key = product.description;  // Only group by description
+                if (mergedProductsMap.has(key)) {
+                    mergedProductsMap.get(key).bag += product.bag;
+                } else {
+                    mergedProductsMap.set(key, { ...product });
+                }
+            });
+
+            const mergedProducts = Array.from(mergedProductsMap.values());
+
+            // Sort merged products by quantity (highest to lowest)
+            mergedProducts.sort((a, b) => b.bag - a.bag);
+
+            const table = document.getElementById("dataTable");
+            const tbody = document.getElementById("productTable");
+
+            if (mergedProducts.length > 0) {
+                tbody.innerHTML = "";
+                mergedProducts.forEach(product => {
+                    const row = `<tr><td>${product.description}</td><td>${product.bag}</td><td>${product.date}</td></tr>`;
+                    tbody.innerHTML += row;
+                });
+                table.style.display = "table";
+            } else {
+                alert("No products found in the selected date range.");
+            }
+        }
+
+        async function fetchDataFromGitHub() {
+            const filePath = "data/products.json";
+            const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${filePath}`;
+
+            try {
+                const response = await fetch(apiUrl, { headers: { Authorization: `token ${GITHUB_CONFIG.TOKEN}` } });
+                if (response.ok) {
+                    const data = await response.json();
+                    products = JSON.parse(atob(data.content));
+                }
+            } catch (error) {
+                console.log("Error fetching data:", error);
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>
