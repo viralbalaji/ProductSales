@@ -85,9 +85,13 @@
             .mobile-buttons { display: block; }
         }
         .error-message { color: red; margin-top: 10px; }
+        .total-row { font-weight: bold; background-color: #f3f3f3; }
     </style>
+
 </head>
+
 <body>
+
     <header>
         <img id="logo" src="https://raw.githubusercontent.com/MJJB-INTERNATIONAL/MJJBimge/ed2da4155903055fb7f9fa882e98fba25ca41101/RUBY%20rrbbb.svg" alt="Logo">
         <div id="header-text">
@@ -127,7 +131,6 @@
     </div>
 
     <script>
-        
         let products = [];
         let GITHUB_CONFIG = {
             TOKEN: '', // Will be set after uploading the JSON file
@@ -229,10 +232,17 @@
             // Sort products by 'bag' quantity (highest to lowest)
             products.sort((a, b) => b.bag - a.bag);
 
+            let totalBags = 0; // Variable to store the total sum of bags
+
             products.forEach(product => {
                 const row = `<tr><td>${product.description}</td><td>${product.bag}</td><td>${product.date}</td></tr>`;
                 tbody.innerHTML += row;
+                totalBags += product.bag; // Add to the total sum
             });
+
+            // Add a total row at the end of the table
+            const totalRow = `<tr class="total-row"><td>Total</td><td>${totalBags}</td><td></td></tr>`;
+            tbody.innerHTML += totalRow;
         }
 
         async function uploadToGitHub() {
@@ -318,10 +328,18 @@
 
             if (mergedProducts.length > 0) {
                 tbody.innerHTML = "";
+                let totalBags = 0; // Variable to store the total sum of bags
+
                 mergedProducts.forEach(product => {
                     const row = `<tr><td>${product.description}</td><td>${product.bag}</td><td>${product.date}</td></tr>`;
                     tbody.innerHTML += row;
+                    totalBags += product.bag; // Add to the total sum
                 });
+
+                // Add a total row at the end of the table
+                const totalRow = `<tr class="total-row"><td>Total</td><td>${totalBags}</td><td></td></tr>`;
+                tbody.innerHTML += totalRow;
+
                 table.style.display = "table";
             } else {
                 alert("No products found in the selected date range.");
@@ -345,6 +363,6 @@
 
     </script>
 
-</body>
+             </body>
 
-</html>
+                     </html>
